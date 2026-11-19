@@ -27,7 +27,7 @@ PulseGate enforces a **gate-before-classify** pipeline so noisy waveforms never 
 
 ---
 
-## 3. Evaluation & Reproducibility
+## 3. Evaluation & Benchmarks
 
 ### Experimental Setup
 - **Dataset:** Public MIT-BIH Arrhythmia / PhysioNet 10-second ECG strips ($n = 14,820$ held-out test strips).
@@ -42,3 +42,42 @@ PulseGate enforces a **gate-before-classify** pipeline so noisy waveforms never 
 | **Sensitivity @ 95% Specificity** | 74.3% | **91.8%** | **+17.5%** |
 | **False Alarms on Noisy Strips ($\text{SQI} < 0.65$)** | Baseline | **-68.4%** | Safely gated for re-capture |
 | **Inference Latency (CPU)** | 1.8 ms/strip | **4.2 ms/strip** | Real-time triage capable |
+
+---
+
+## 4. Explicit Limitations & Failure Conditions
+PulseGate stops being useful—and requires human override or recalibration—under the following conditions:
+- **Severe Electrode Dropout ($>40\%$ missing signal):** Flatlines or intermittent lead disconnection degrade $\text{SQI}$ estimation and require immediate physical re-attachment.
+- **Out-of-Domain Sensors & Populations:** Trained on adult clinical ECG leads; **not calibrated** for pediatric ECGs or consumer optical smartwatch PPG without domain adaptation.
+- **Rare Arrhythmia Subtypes:** Rhythm classes with $<50$ training examples exhibit wider confidence intervals and higher epistemic uncertainty.
+- **High-Amplitude Muscle Tremor:** Sustained shivering or heavy movement can occasionally mimic wide-QRS morphology and bypass the $0.65$ $\text{SQI}$ threshold.
+
+---
+
+## 5. What I Would Do With Another Month
+1. **Cross-Dataset External Validation:** Evaluate zero-shot generalization on PTB-XL and wearable single-lead ECG cohorts without re-tuning thresholds.
+2. **Conformal Prediction Intervals:** Replace heuristic uncertainty bands with distribution-free conformal prediction sets to guarantee coverage on rare arrhythmias.
+3. **Clinician Workflow Timing Study:** Measure total triage turnaround time (including physical strip re-captures) in simulated nurse workflows.
+
+---
+
+## AI Tool Disclosure
+AI coding assistants (v0 and Gemini) were used to scaffold the React/Tailwind frontend components and boilerplate documentation. All signal-processing pipelines, patient-disjoint splitting logic, evaluation design, and verification were completed by the author.
+
+---
+
+## How to Run It
+
+### 1. Run the Interactive Triage Console (Web App)
+The web dashboard includes an **Offline Simulation / Replay Mode** active by default with preloaded held-out test strips (`Normal`, `AFib`, `PVC`, `Motion Artifact`, and `Noisy Tachycardia`) plus a live electrode-noise injection slider—no external API keys required:
+
+```bash
+git clone https://github.com/darrenthanawinn-ux/PulseGate.git
+
+# Install dependencies (using pnpm or npm)
+pnpm install
+# or: npm install
+
+# Start the local development server
+pnpm dev
+# or: npm run dev
